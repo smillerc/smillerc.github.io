@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Series on Scientific Development</title>
+    <link>https://github.com/smillerc/smillerc.github.io/series/</link>
+    <description>Recent content in Series on Scientific Development</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>© Copyright Sam Miller, 2020 | [Vitae](https://github.com/dataCobra/hugo-vitae) theme for [Hugo](https://gohugo.io)</copyright>
+    
+	<atom:link href="https://github.com/smillerc/smillerc.github.io/series/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+  </channel>
+</rss>

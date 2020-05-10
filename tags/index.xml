@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on Scientific Development</title>
+    <link>https://github.com/smillerc/smillerc.github.io/tags/</link>
+    <description>Recent content in Tags on Scientific Development</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>© Copyright Sam Miller, 2020 | [Vitae](https://github.com/dataCobra/hugo-vitae) theme for [Hugo](https://gohugo.io)</copyright>
+    <lastBuildDate>Sun, 10 May 2020 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://github.com/smillerc/smillerc.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>fortran</title>
+      <link>https://github.com/smillerc/smillerc.github.io/tags/fortran/</link>
+      <pubDate>Sun, 10 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://github.com/smillerc/smillerc.github.io/tags/fortran/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

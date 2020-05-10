@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Scientific Development</title>
+    <link>https://github.com/smillerc/smillerc.github.io/</link>
+    <description>Recent content on Scientific Development</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>© Copyright Sam Miller, 2020 | [Vitae](https://github.com/dataCobra/hugo-vitae) theme for [Hugo](https://gohugo.io)</copyright>
+    <lastBuildDate>Sun, 10 May 2020 00:00:00 +0000</lastBuildDate>
+    
+        <atom:link href="https://github.com/smillerc/smillerc.github.io/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+          <title>Neat new features of Fortran 2018</title>
+          <link>https://github.com/smillerc/smillerc.github.io/posts/neat_fortran_2018_improvements/</link>
+          <pubDate>Sun, 10 May 2020 00:00:00 &#43;0000</pubDate>
+          
+          <guid>https://github.com/smillerc/smillerc.github.io/posts/neat_fortran_2018_improvements/</guid>
+          <description>Assumed Rank Arrays One new feature includes assumed rank arrays.
+real(real64) function f(x)real(real64), intent(in) :: x(..)select rank (x)rank (*)error stop &amp;#34;Function not defined on assumed-size arrays&amp;#34;rank (0)f = abs(x)rank (1)f = sum(abs(x))rank (2)f = sqrt(sum(x**2))rank (3)f = sum(abs(x)**3)**(1/3.0d0)rank (4)f = sum(x**4)**(0.25d0)rank defaulterror stop &amp;#34;Function not supported for rank&amp;gt;4 (unstable)&amp;#34;end function</description>
+        </item>
+        <item>
+          <title>About</title>
+          <link>https://github.com/smillerc/smillerc.github.io/about/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 &#43;0000</pubDate>
+          
+          <guid>https://github.com/smillerc/smillerc.github.io/about/</guid>
+          <description>This is some static page where you can write about yourself.</description>
+        </item>
+        <item>
+          <title>Links</title>
+          <link>https://github.com/smillerc/smillerc.github.io/links/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 &#43;0000</pubDate>
+          
+          <guid>https://github.com/smillerc/smillerc.github.io/links/</guid>
+          <description>This is some static page where you can write about yourself.</description>
+        </item>
+        <item>
+          <title>Publications</title>
+          <link>https://github.com/smillerc/smillerc.github.io/publications/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 &#43;0000</pubDate>
+          
+          <guid>https://github.com/smillerc/smillerc.github.io/publications/</guid>
+          <description>This is some static page where you can write about yourself.</description>
+        </item>
+        
+  </channel>
+</rss>
