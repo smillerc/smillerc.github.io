@@ -9,7 +9,7 @@
 
 Domain-decomposition splits a large problem into small subdomains that live on different MPI ranks. Stencil operations commonly used in solving PDEs require neighbor information, and this is done with halo cells along the edge of each subdomain. In the image below, the domain is decomposed into 4 subdomains, with a single layer of halo cells on all sides. Here process 4 is shown exchanging neighbor information with processes 3 and 2. Domain decomposition can happen in 1D, 2D, and 3D.
 
-![](../assets/images/halo_exchange.png)
+![](/assets/images/halo_exchange.png)
 
 ## Features
 
@@ -40,8 +40,8 @@ const root = 1
 
 # Create a topology type the facilitates neighbor awareness and global size
 topology = CartesianTopology(comm, 
-  							 [4,2], # domain decompose in a 4x2 grid of ranks
-  							 [false, false]) # no periodic boundaries
+                             [4,2], # domain decompose in a 4x2 grid of ranks
+                             [false, false]) # no periodic boundaries
 
 nhalo = 2
 
@@ -59,7 +59,7 @@ B_global = rand(512,512)
 # divide by rank and return B::MPIHaloArray
 B_local = scatterglobal(B_global, root, nhalo, topology; 
                         do_corners = false) # if your algorithm doesn't need 
-																						# corner info, this will save communication
+                        # corner info, this will save communication
 # do some work
 # ....
 updatehalo!(B_local)
