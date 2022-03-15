@@ -1,0 +1,41 @@
+<!doctype html> <html lang=en > <meta charset=UTF-8 > <meta name=viewport  content="width=device-width, initial-scale=1"> <link rel=stylesheet  href="/libs/highlight/github.min.css"> <link rel=stylesheet  href="/css/franklin.css"> <link rel=stylesheet  href="/css/basic.css"> <link rel=icon  href="/assets/favicon.png"> <title>A new array type for domain decomposition in Julia</title> <header> <div class=blog-name ><a href="">Sam Miller's Blog</a></div> <nav> <ul> <li><a href="/">Home</a> <li><a href="/posts/">Posts</a> <li><a href="/publications/">Publications</a> <li><a href="/tags/">Tags</a> <li><a href="/aboutme/">About</a> </ul> <img src="/assets/hamburger.svg" id=menu-icon > </nav> </header> <div class=franklin-content ><h1 id=mpihaloarraysjl ><a href="#mpihaloarraysjl" class=header-anchor >MPIHaloArrays.jl</a></h1> <p><a href="https://github.com/smillerc/MPIHaloArrays.jl"><code>MPIHaloArrays.jl</code></a> is a new package that provides the <code>MPIHaloArray</code> array type, which is a subtype of <code>AbstractArray</code>, that facilitates the exchange of halo, or ghost, cells commonly used in domain-decomposition methods high performance computing problems. In my case, I use this method to solve the compressible Euler equations for fluid dynamics in parallel. While there are other existing libraries that have similar decomposition functionality, such as <a href="https://github.com/barche/MPIArrays.jl"><code>MPIArrays.jl</code></a>, <a href="https://github.com/jipolanco/PencilArrays.jl"><code>PencilArrays.jl</code></a>, and <a href="https://github.com/eth-cscs/ImplicitGlobalGrid.jl"><code>ImplicitGlobalGrid.jl</code></a>, I wanted to create an array type specifically for this task. Each library only provides only a portion of the functionality I needed, so I decided to try creating a new one. </p> <p>Domain-decomposition splits a large problem into small subdomains that live on different MPI ranks. Stencil operations commonly used in solving PDEs require neighbor information, and this is done with halo cells along the edge of each subdomain. In the image below, the domain is decomposed into 4 subdomains, with a single layer of halo cells on all sides. Here process 4 is shown exchanging neighbor information with processes 3 and 2. Domain decomposition can happen in 1D, 2D, and 3D.</p> <p><img src="../assets/images/halo_exchange.png" alt="" /></p> <h2 id=features ><a href="#features" class=header-anchor >Features</a></h2> <ul> <li><p>1D, 2D, and 3D domain decomposition.</p> <li><p>Neighbor exhange with arbitrarily sized halo cell regions. Note, this is currently fixed across all dimensions. </p> <li><p>Communication is currently handled by <code>MPI.ISend</code> and <code>MPI.IRecv</code> underneath, but future versions will give the option for one-sided communication with <code>MPI.Put</code> and <code>MPI.Get</code>.</p> <li><p>Halo exchange can be orthogonal-only &#40;e.g. <code>&#91;i&#43;1,j,k&#93;</code>&#41; , or it can include corners as well &#40;e.g <code>&#91;i&#43;1,j&#43;1,k&#93;</code>&#41;</p> </ul> <h2 id=todo ><a href="#todo" class=header-anchor >TODO</a></h2> <ul> <li><p>GPU testing – I don’t currently have a local GPU to test this with, but future work will include GPU-aware MPI</p> <li><p>Fix the limitation of 1D, 2D, or 3D arrays. For example, an array <code>U</code> could have dimensions for <code>&#91;q,i,j&#93;</code>, but halo exchanges are only done on <code>i</code> and <code>j</code>.</p> <li><p>Optimization of neighbor communication &#40;caching, etc…&#41;</p> <li><p>Finish onesided implementation</p> </ul> <h2 id=examples ><a href="#examples" class=header-anchor >Examples</a></h2> <p><strong>Quickstart</strong></p> <pre><code class="julia hljs"><span class=hljs-keyword >using</span> MPI, MPIHaloArrays
+
+MPI.Init()
+<span class=hljs-keyword >const</span> comm = MPI.COMM_WORLD
+<span class=hljs-keyword >const</span> rank = MPI.Comm_rank(comm)
+<span class=hljs-keyword >const</span> nprocs = MPI.Comm_size(comm)
+<span class=hljs-keyword >const</span> root = <span class=hljs-number >1</span>
+
+<span class=hljs-comment ># Create a topology type the facilitates neighbor awareness and global size</span>
+topology = CartesianTopology(comm, 
+  							 [<span class=hljs-number >4</span>,<span class=hljs-number >2</span>], <span class=hljs-comment ># domain decompose in a 4x2 grid of ranks</span>
+  							 [<span class=hljs-literal >false</span>, <span class=hljs-literal >false</span>]) <span class=hljs-comment ># no periodic boundaries</span>
+
+nhalo = <span class=hljs-number >2</span>
+
+<span class=hljs-comment ># Create some data on the local rank</span>
+local_data = rand(<span class=hljs-number >10</span>,<span class=hljs-number >20</span>) * rank
+A = MPIHaloArray(local_data, topology, nhalo)
+fillhalo!(A, -<span class=hljs-number >1</span>)
+
+<span class=hljs-comment ># Perform halo exchange</span>
+updatehalo!(A)
+
+<span class=hljs-comment ># Or start with a large global array</span>
+B_global = rand(<span class=hljs-number >512</span>,<span class=hljs-number >512</span>)
+
+<span class=hljs-comment ># divide by rank and return B::MPIHaloArray</span>
+B_local = scatterglobal(B_global, root, nhalo, topology; 
+                        do_corners = <span class=hljs-literal >false</span>) <span class=hljs-comment ># if your algorithm doesn&#x27;t need </span>
+																						<span class=hljs-comment ># corner info, this will save communication</span>
+<span class=hljs-comment ># do some work</span>
+<span class=hljs-comment ># ....</span>
+updatehalo!(B_local)
+<span class=hljs-comment ># do some work</span>
+<span class=hljs-comment ># ....</span>
+
+<span class=hljs-comment ># and pull it back to the root rank</span>
+B_result = gatherglobal(B_local; root=root)
+
+GC.gc()
+MPI.Finalize()</code></pre> <p><strong>2D Diffusion</strong></p> <p>See in the example <a href="https://github.com/smillerc/MPIHaloArrays.jl/blob/main/docs/examples/04-diffusion2d.jl">here</a> in the github repository.</p> <h3 id=documentation ><a href="#documentation" class=header-anchor >Documentation</a></h3> <p>See the docs <a href="https://smillerc.github.io/MPIHaloArrays.jl/stable/">here</a></p> <div class=page-foot > <div class=copyright > &copy; Sam Miller. Last modified: March 15, 2022. Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>. </div> </div> </div>

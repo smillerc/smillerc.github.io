@@ -1,0 +1,138 @@
+<!doctype html> <html lang=en > <meta charset=UTF-8 > <meta name=viewport  content="width=device-width, initial-scale=1"> <link rel=stylesheet  href="/libs/katex/katex.min.css"> <link rel=stylesheet  href="/libs/highlight/github.min.css"> <link rel=stylesheet  href="/css/franklin.css"> <link rel=stylesheet  href="/css/basic.css"> <link rel=icon  href="/assets/favicon.png"> <title>Writing a Jacobian Free Newton Krylov (JFNK) solver</title> <header> <div class=blog-name ><a href="">Sam Miller's Blog</a></div> <nav> <ul> <li><a href="/">Home</a> <li><a href="/posts/">Posts</a> <li><a href="/publications/">Publications</a> <li><a href="/tags/">Tags</a> <li><a href="/aboutme/">About</a> </ul> <img src="/assets/hamburger.svg" id=menu-icon > </nav> </header> <div class=franklin-content ><h1 id=writing_a_jacobian_free_newton_krylov_jfnk_solver_in_julia ><a href="#writing_a_jacobian_free_newton_krylov_jfnk_solver_in_julia" class=header-anchor >Writing a Jacobian Free Newton Krylov &#40;JFNK&#41; solver in Julia</a></h1> <h2 id=theory ><a href="#theory" class=header-anchor >Theory</a></h2> <span class=katex-display ><span class=katex ><span class=katex-mathml ><math xmlns="http://www.w3.org/1998/Math/MathML" display=block ><semantics><mrow><mi mathvariant=bold-italic >J</mi><mi>v</mi><mo>=</mo><mfrac><mrow><mi mathvariant=bold-italic >F</mi><mo stretchy=false >(</mo><mi>T</mi><mo>+</mo><mi>ϵ</mi><mi>v</mi><mo stretchy=false >)</mo><mo>−</mo><mi mathvariant=bold-italic >F</mi><mo stretchy=false >(</mo><mi>T</mi><mo stretchy=false >)</mo></mrow><mi>ϵ</mi></mfrac></mrow><annotation encoding="application/x-tex"> \boldsymbol{J}v = \frac{\boldsymbol{F}(T + \epsilon v) - \boldsymbol{F}(T)}{\epsilon} </annotation></semantics></math></span><span class=katex-html  aria-hidden=true ><span class=base ><span class=strut  style="height:0.68611em;vertical-align:0em;"></span><span class=mord ><span class=mord ><span class="mord boldsymbol" style="margin-right:0.10069em;">J</span></span></span><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class=mspace  style="margin-right:0.2777777777777778em;"></span><span class=mrel >=</span><span class=mspace  style="margin-right:0.2777777777777778em;"></span></span><span class=base ><span class=strut  style="height:2.113em;vertical-align:-0.686em;"></span><span class=mord ><span class="mopen nulldelimiter"></span><span class=mfrac ><span class="vlist-t vlist-t2"><span class=vlist-r ><span class=vlist  style="height:1.427em;"><span style="top:-2.314em;"><span class=pstrut  style="height:3em;"></span><span class=mord ><span class="mord mathnormal">ϵ</span></span></span><span style="top:-3.23em;"><span class=pstrut  style="height:3em;"></span><span class=frac-line  style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class=pstrut  style="height:3em;"></span><span class=mord ><span class=mord ><span class=mord ><span class="mord boldsymbol" style="margin-right:0.15972em;">F</span></span></span><span class=mopen >(</span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class=mspace  style="margin-right:0.2222222222222222em;"></span><span class=mbin >+</span><span class=mspace  style="margin-right:0.2222222222222222em;"></span><span class="mord mathnormal">ϵ</span><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class=mclose >)</span><span class=mspace  style="margin-right:0.2222222222222222em;"></span><span class=mbin >−</span><span class=mspace  style="margin-right:0.2222222222222222em;"></span><span class=mord ><span class=mord ><span class="mord boldsymbol" style="margin-right:0.15972em;">F</span></span></span><span class=mopen >(</span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class=mclose >)</span></span></span></span><span class=vlist-s >​</span></span><span class=vlist-r ><span class=vlist  style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span> <p>S.Y. Kadioglu, D.A. Knoll, &quot;A fully second order implicit/explicit time integration technique for hydrodynamics plus nonlinear heat conduction problems&quot;, Journal of Computational Physics 229 &#40;2010&#41; 3237–3249. <a href="http://dx.doi.org/10.1016/j.jcp.2009.12.039">link</a></p> <h1 id=implementation ><a href="#implementation" class=header-anchor >Implementation</a></h1> <pre><code class="julia hljs"><span class=hljs-keyword >abstract type</span> AbstractJFNKSolver <span class=hljs-keyword >end</span>
+
+<span class=hljs-keyword >struct</span> JFNKSolver1D{T &lt;: <span class=hljs-built_in >AbstractFloat</span>} &lt;: AbstractJFNKSolver
+    R::<span class=hljs-built_in >Vector</span>{T}      <span class=hljs-comment ># Residual results</span>
+    R_pert::<span class=hljs-built_in >Vector</span>{T} <span class=hljs-comment ># Perturbed residual results</span>
+    v::<span class=hljs-built_in >Vector</span>{T}      <span class=hljs-comment ># Krylov vector</span>
+    x_pert::<span class=hljs-built_in >Vector</span>{T} <span class=hljs-comment ># Perturbed solution vector/array</span>
+    dim::<span class=hljs-built_in >Int</span>          <span class=hljs-comment ># Problem dimension, e.g. for (M,N) this is M*N</span>
+<span class=hljs-keyword >end</span>
+
+<span class=hljs-string >&quot;&quot;&quot;1D constructor&quot;&quot;&quot;</span>
+<span class=hljs-keyword >function</span> JFNKSolver(x::<span class=hljs-built_in >AbstractVector</span>{T}) <span class=hljs-keyword >where</span> {T &lt;: <span class=hljs-built_in >AbstractFloat</span>}
+    len = length(x)
+    BLAS.set_num_threads(Base.Threads.nthreads())
+    <span class=hljs-keyword >return</span> JFNKSolver1D(
+        similar(x),
+        similar(x),
+        similar(x),
+        similar(x),
+        len)
+<span class=hljs-keyword >end</span></code></pre> <p>Approximating the effect of the Jacobian-vector product <span class=katex ><span class=katex-mathml ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant=bold-italic >J</mi><mi>v</mi></mrow><annotation encoding="application/x-tex">\boldsymbol{J}v</annotation></semantics></math></span><span class=katex-html  aria-hidden=true ><span class=base ><span class=strut  style="height:0.68611em;vertical-align:0em;"></span><span class=mord ><span class=mord ><span class="mord boldsymbol" style="margin-right:0.10069em;">J</span></span></span><span class="mord mathnormal" style="margin-right:0.03588em;">v</span></span></span></span></p> <pre><code class="julia hljs"><span class=hljs-string >&quot;&quot;&quot;Approximate the effect of the Jacobian-vector product `Jv`&quot;&quot;&quot;</span>
+<span class=hljs-keyword >function</span> Jvf!(Jv::<span class=hljs-built_in >AbstractVector</span>{T}, v::<span class=hljs-built_in >AbstractVector</span>{T})
+    <span class=hljs-keyword >global</span> krylov_iter += <span class=hljs-number >1</span>
+    <span class=hljs-comment ># Jv is updated in-place</span>
+    <span class=hljs-comment ># v is the krylov vector space from the GMRES solution</span>
+    b = sqrt(eps())
+
+    v_L2norm = norm(v, <span class=hljs-number >2</span>)
+
+    psum = <span class=hljs-number >0.0</span>
+    <span class=hljs-keyword >for</span> Idx <span class=hljs-keyword >in</span> <span class=hljs-built_in >LinearIndices</span>(x)
+        psum = psum + b * (<span class=hljs-number >1.0</span> + abs(x[Idx]))
+    <span class=hljs-keyword >end</span>
+
+    <span class=hljs-comment ># Calculate the perturbation ϵ</span>
+    <span class=hljs-keyword >if</span> v_L2norm &gt; eps()
+        ϵ = psum / (solver.dim * v_L2norm) 
+    <span class=hljs-keyword >else</span>
+        ϵ = psum / solver.dim  
+    <span class=hljs-keyword >end</span>
+
+    <span class=hljs-keyword >for</span> Idx <span class=hljs-keyword >in</span> <span class=hljs-built_in >LinearIndices</span>(x)
+        solver.x_pert[Idx] = x[Idx] + ϵ * v[Idx]
+    <span class=hljs-keyword >end</span>
+
+    f(solver.R_pert, solver.x_pert, p)
+
+    <span class=hljs-keyword >for</span> Idx <span class=hljs-keyword >in</span> <span class=hljs-built_in >LinearIndices</span>(Jv)
+        Jv[Idx] = (solver.R_pert[Idx] - solver.R[Idx]) / ϵ
+    <span class=hljs-keyword >end</span>
+<span class=hljs-keyword >end</span></code></pre> <h3 id=putting_it_all_together ><a href="#putting_it_all_together" class=header-anchor >Putting it all together</a></h3> <pre><code class="julia hljs"><span class=hljs-string >&quot;&quot;&quot;Jacobian-Free Newton Krylov Method&quot;&quot;&quot;</span>
+<span class=hljs-keyword >function</span> JFNK!(solver::AbstractJFNKSolver, 
+               x::<span class=hljs-built_in >AbstractVector</span>{T}, 
+               f, p, tolerance::<span class=hljs-built_in >Real</span>, 
+               max_iter::<span class=hljs-built_in >Int</span>; verbose=<span class=hljs-literal >false</span>) <span class=hljs-keyword >where</span> {T &lt;: <span class=hljs-built_in >AbstractFloat</span>}
+    
+    M = solver.dim
+    
+    fill!(solver.v, <span class=hljs-number >0</span>)
+    fill!(solver.R, <span class=hljs-number >0</span>)
+    fill!(solver.R_pert, <span class=hljs-number >0</span>)
+
+    <span class=hljs-comment ># Get the initial residual value</span>
+    f(solver.R, x, p)
+
+    <span class=hljs-keyword >global</span> krylov_iters_per_newton = zeros(<span class=hljs-built_in >Int64</span>, <span class=hljs-number >0</span>)
+    <span class=hljs-keyword >global</span> krylov_iter = <span class=hljs-number >0</span>
+    <span class=hljs-keyword >global</span> newton_iter = <span class=hljs-number >1</span>
+
+    <span class=hljs-string >&quot;&quot;&quot;Approximate the effect of the Jacobian-vector product `Jv`&quot;&quot;&quot;</span>
+    <span class=hljs-keyword >function</span> Jvf!(Jv::<span class=hljs-built_in >AbstractVector</span>{T}, v::<span class=hljs-built_in >AbstractVector</span>{T})
+        <span class=hljs-keyword >global</span> krylov_iter += <span class=hljs-number >1</span>
+        <span class=hljs-comment ># Jv is updated in-place</span>
+        <span class=hljs-comment ># v is the krylov vector space from the GMRES solution</span>
+        b = sqrt(eps())
+
+        v_L2norm = norm(v, <span class=hljs-number >2</span>)
+
+        psum = <span class=hljs-number >0.0</span>
+        <span class=hljs-keyword >for</span> Idx <span class=hljs-keyword >in</span> <span class=hljs-built_in >LinearIndices</span>(x)
+             psum = psum + b * (<span class=hljs-number >1.0</span> + abs(x[Idx]))
+        <span class=hljs-keyword >end</span>
+
+        <span class=hljs-comment ># Calculate the perturbation ϵ</span>
+        <span class=hljs-keyword >if</span> v_L2norm &gt; eps()
+            ϵ = psum / (solver.dim * v_L2norm) 
+        <span class=hljs-keyword >else</span>
+            ϵ = psum / solver.dim  
+        <span class=hljs-keyword >end</span>
+
+        <span class=hljs-keyword >for</span> Idx <span class=hljs-keyword >in</span> <span class=hljs-built_in >LinearIndices</span>(x)
+             solver.x_pert[Idx] = x[Idx] + ϵ * v[Idx]
+        <span class=hljs-keyword >end</span>
+
+        f(solver.R_pert, solver.x_pert, p)
+
+        <span class=hljs-keyword >for</span> Idx <span class=hljs-keyword >in</span> <span class=hljs-built_in >LinearIndices</span>(Jv)
+             Jv[Idx] = (solver.R_pert[Idx] - solver.R[Idx]) / ϵ
+        <span class=hljs-keyword >end</span>
+    <span class=hljs-keyword >end</span>
+
+    <span class=hljs-comment ># Operator defining the function that estimtes the Jacobian vector product Jv, which</span>
+    <span class=hljs-comment ># is done in the Jvf! function</span>
+    Jv_func = LinearMap(Jvf!, M; ismutating=<span class=hljs-literal >true</span>)
+        
+    <span class=hljs-comment ># These need to be global to be seen in the while loop &quot;soft&quot; scope</span>
+    <span class=hljs-keyword >global</span> resid_L2_init = norm(solver.R, <span class=hljs-number >2</span>)
+    <span class=hljs-keyword >global</span> resid_L2_norm = resid_L2_init
+    <span class=hljs-keyword >global</span> convergence = typemax(T)
+
+    <span class=hljs-comment ># Iterate until convergence or the iteration limit</span>
+    <span class=hljs-keyword >while</span> <span class=hljs-literal >true</span>
+        <span class=hljs-comment ># Find the Krylov vectors</span>
+        δx, stats = dqgmres(Jv_func, solver.R, verbose=<span class=hljs-number >0</span>, history=<span class=hljs-literal >true</span>)
+        append!(krylov_iters_per_newton, krylov_iter)
+
+        <span class=hljs-comment ># update the solution</span>
+        <span class=hljs-keyword >for</span> Ind <span class=hljs-keyword >in</span> <span class=hljs-built_in >LinearIndices</span>(x)
+            x[Ind] = x[Ind] - δx[Ind]
+        <span class=hljs-keyword >end</span>
+
+        f(solver.R, x, p) <span class=hljs-comment ># new residual</span>
+        
+        <span class=hljs-keyword >global</span> resid_L2_norm = norm(solver.R, <span class=hljs-number >2</span>)
+        <span class=hljs-keyword >global</span> convergence = resid_L2_norm / resid_L2_init
+        <span class=hljs-keyword >global</span> newton_iter += <span class=hljs-number >1</span>
+        <span class=hljs-keyword >global</span> ave_krylov_iter = sum(krylov_iters_per_newton) / length(krylov_iters_per_newton)
+        
+        <span class=hljs-keyword >if</span> newton_iter &gt;= max_iter
+            <span class=hljs-meta >@error</span> <span class=hljs-string >&quot;JFNK max iteration reached max_iter=(<span class=hljs-variable >$max_iter</span>)&quot;</span>
+            <span class=hljs-keyword >return</span> convergence, newton_iter, ave_krylov_iter
+        <span class=hljs-keyword >end</span>
+
+        <span class=hljs-keyword >if</span> resid_L2_norm &lt; resid_L2_init * tolerance <span class=hljs-keyword >break</span> <span class=hljs-keyword >end</span>
+    <span class=hljs-keyword >end</span>
+
+    <span class=hljs-keyword >return</span> convergence, newton_iter, ave_krylov_iter
+<span class=hljs-keyword >end</span></code></pre> <div class=page-foot > <div class=copyright > &copy; Sam Miller. Last modified: March 15, 2022. Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>. </div> </div> </div>
