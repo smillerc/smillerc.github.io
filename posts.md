@@ -1,3 +1,3 @@
-# all posts
+# All Posts
 
 {{ all_posts }}
