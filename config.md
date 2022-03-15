@@ -3,13 +3,15 @@ Add here global page variables to use throughout your
 website.
 The website_* must be defined for the RSS to work
 -->
-@def website_title = "Franklin Template"
-@def website_descr = "Example website using Franklin"
-@def website_url   = "https://smillerc.github.io/FranklinTemplates.jl/"
+@def website_title = "Sam Miller's Blog"
+@def website_descr = "A blog about physics and software development"
+@def website_url   = "https://smillerc.github.io/"
 
 @def author = "Sam Miller"
 
 @def mintoclevel = 2
+
+@def tag_page_path = "tags"
 
 <!--
 Add here files or directories that should be ignored by Franklin, otherwise
