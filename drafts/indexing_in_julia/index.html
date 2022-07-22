@@ -1,0 +1,18 @@
+<!doctype html> <html lang=en > <meta charset=UTF-8 > <meta name=viewport  content="width=device-width, initial-scale=1"> <link rel=stylesheet  href="/libs/highlight/github.min.css"> <link rel=stylesheet  href="/css/franklin.css"> <link rel=stylesheet  href="/css/basic.css"> <link rel=icon  href="/assets/favicon.png"> <title>Array indexing tips in Julia</title> <header> <div class=blog-name ><a href="">physics.dev</a></div> <nav> <ul> <li><a href="/">Home</a> <li><a href="/aboutme/">About</a> </ul> <img src="/assets/hamburger.svg" id=menu-icon > </nav> </header> <div class=franklin-content ><h1 id=array_indexing_tips_in_julia ><a href="#array_indexing_tips_in_julia" class=header-anchor >Array indexing tips in Julia</a></h1> <p>https://discourse.julialang.org/t/discussion-on-why-i-no-longer-recommend-julia-by-yuri-vishnevsky/81151/88</p> <p>These are a collection of useful methods of iterating through arrays in Julia. Much of this is already in the manual or other documentation online, but this is sort of a cheatsheet for my own purposes. Hopefully this helps you.</p> <p>One of the confusing aspects for me when I was starting in Julia how it handles arbitrary array interation. Coming from Fortran-land I was pleasantly surprised to see </p> <pre><code class="julia hljs"><span class=hljs-keyword >do</span> j = <span class=hljs-number >1</span>, N
+    <span class=hljs-keyword >do</span> i = <span class=hljs-number >1</span>, M
+        A(i,j) = A(i,j) + <span class=hljs-number >1</span>
+    <span class=hljs-keyword >end</span> <span class=hljs-keyword >do</span>
+<span class=hljs-keyword >end</span> <span class=hljs-keyword >do</span></code></pre> <p>Using <code>eachindex</code></p> <p>CartesianIndices</p> <pre><code class="julia hljs"><span class=hljs-keyword >for</span> I <span class=hljs-keyword >in</span> <span class=hljs-built_in >CartesianIndices</span>(A)
+    i,j = <span class=hljs-built_in >Tuple</span>(I)
+    <span class=hljs-meta >@show</span> i, j
+<span class=hljs-keyword >end</span></code></pre> <p>OffsetArrays</p> <pre><code class="julia hljs"><span class=hljs-keyword >using</span> OffsetArrays
+
+B = OffsetArray(reshape(<span class=hljs-number >1</span>:<span class=hljs-number >9</span>, <span class=hljs-number >3</span>, <span class=hljs-number >3</span>), -<span class=hljs-number >3</span>, -<span class=hljs-number >2</span>)</code></pre> <pre><code class="plaintext hljs">3×3 OffsetArray(reshape(::UnitRange{Int64}, 3, 3), -2:0, -1:1) with eltype Int64 with indices -2:0×-1:1:
+ 1  4  7
+ 2  5  8
+ 3  6  9</code></pre> <p>Loop along the diagonal of the <code>OffsetArray</code></p> <pre><code class="julia hljs"><span class=hljs-keyword >for</span> (i, j) <span class=hljs-keyword >in</span> zip(axes(B)...)
+    <span class=hljs-meta >@show</span> i, j
+<span class=hljs-keyword >end</span></code></pre> <pre><code class="plaintext hljs">(i, j) = (-2, -1)
+(i, j) = (-1, 0)
+(i, j) = (0, 1)
+</code></pre> <div class=page-foot > <div class=copyright > &copy; Sam Miller. Last modified: July 22, 2022. Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>. </div> </div> </div>
