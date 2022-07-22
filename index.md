@@ -1,13 +1,9 @@
 @def title = "About This Blog"
 
-## Recent Posts
+# Recent Posts
 
 {{ recent_posts 3 }}
 
-<!-- # About This Blog
+# About This Blog
 
-What this blog is all about
-
-## Background
-
-I'm a person... -->
+This blog is mostly a collection of things I've learned about scientific code development in Julia, Fortran, and more.

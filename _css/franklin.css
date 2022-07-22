@@ -3,8 +3,8 @@
 ================================================================== */
 
 html {
-    font-family: "Merriweather", Arial;
-    font-size  : 17px;
+    font-family: "Merriweather Light", Arial;
+    font-size  : 15px;
     color: #1c1c1c;
 }
 
@@ -81,9 +81,18 @@ html {
     TITLES
 ================================================================== */
 
-.franklin-content h1 { font-size: 24px; }
-.franklin-content h2 { font-size: 22px; }
-.franklin-content h3 { font-size: 20px; }
+.franklin-content h1 {
+    font-family: "Raleway Light"; 
+    font-size: 24px; 
+    }
+.franklin-content h2 {
+    font-family: "Raleway Light"; 
+    font-size: 22px; 
+    }
+.franklin-content h3 {
+    font-family: "Raleway Light"; 
+    font-size: 20px; 
+    }
 
 .franklin-content h1, h2, h3, h4, h5, h6 {
     text-align: left; }
