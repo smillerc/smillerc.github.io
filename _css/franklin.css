@@ -1,6 +1,8 @@
 /* ==================================================================
     DEFAULT FONT AND LAYOUT
 ================================================================== */
+@import url(//fonts.googleapis.com/css?family=Raleway);
+@import url(//fonts.googleapis.com/css?family=Merriweather);
 
 html {
     font-family: "Merriweather Light", Arial;
