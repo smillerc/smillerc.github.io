@@ -7,6 +7,7 @@ before_script:
 pages:
   stage: deploy
   script:
+    - rm Manifest.toml
     - julia --project=@. -e 'import Pkg; Pkg.instantiate();
       using NodeJS; run(`$(npm_cmd()) install highlight.js`);
       using Franklin;
