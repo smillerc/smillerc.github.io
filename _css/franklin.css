@@ -1,11 +1,10 @@
 /* ==================================================================
     DEFAULT FONT AND LAYOUT
 ================================================================== */
-@import url(//fonts.googleapis.com/css?family=Raleway);
-@import url(//fonts.googleapis.com/css?family=Merriweather);
+@import url('https://fonts.googleapis.com/css2?family=Merriweather&family=Raleway&display=swap');
 
 html {
-    font-family: "Merriweather Light", Arial;
+    font-family: "Merriweather", Arial;
     font-size  : 15px;
     color: #1c1c1c;
 }
@@ -84,15 +83,15 @@ html {
 ================================================================== */
 
 .franklin-content h1 {
-    font-family: "Raleway Light"; 
+    font-family: "Raleway"; 
     font-size: 24px; 
     }
 .franklin-content h2 {
-    font-family: "Raleway Light"; 
+    font-family: "Raleway"; 
     font-size: 22px; 
     }
 .franklin-content h3 {
-    font-family: "Raleway Light"; 
+    font-family: "Raleway"; 
     font-size: 20px; 
     }
 
