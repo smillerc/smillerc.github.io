@@ -1,10 +1,5 @@
 # About
 
-<!-- ![](/assets/images/profile_pic.png) -->
-
-<!-- ![](__site/assets/images/profile_pic.png) -->
-
-
 I'm a computational physicist working at the [Laboratory for Laser Energetics](https://www.lle.rochester.edu/) at the University of Rochester, NY. I did my Ph.D. in Mechanical Engineering specializing in hydrodynamic instabilities that occur in inertial confinement fusion. More specifically, my research included high-fidelity simulations of micron-scale internal defects in cryogenic targets and described how these defects evolve and create seeds for hydrodynamic instability growth. In my day-to-day job I maintain and develop high performance scientific code that simulate laser direct-drive inertial confinement fusion implosions in 1D, 2D, and 3D. 
 
 [ORCiD](https://orcid.org/0000-0001-6452-2308) | [Google Scholar Profile](https://scholar.google.com/citations?hl=en&user=WGflEWoAAAAJ)
@@ -25,8 +20,8 @@ I'm a computational physicist working at the [Laboratory for Laser Energetics](h
 
 ### Theses
 
-- **PhD Dissertation**: 2022, University of Rochester, *"Hydrodynamic Instabilities in Inertial Confinement Fusion: Physics, Numerical Methods, and Implementation"* - [(pdf)](__site/assets/publications/dissertation.pdf)
-- **Master's Thesis**: 2015, University of Dayton, *"Fluid-Structure Interaction of a Variable Camber Compliant Wing"* [(pdf)](__site/assets/publications/fluid_struct_ms_thesis.pdf)
+- **PhD Dissertation**: 2022, University of Rochester, *"Hydrodynamic Instabilities in Inertial Confinement Fusion: Physics, Numerical Methods, and Implementation"* - [(pdf)](/assets/publications/dissertation.pdf)
+- **Master's Thesis**: 2015, University of Dayton, *"Fluid-Structure Interaction of a Variable Camber Compliant Wing"* [(pdf)](/assets/publications/fluid_struct_ms_thesis.pdf)
 
 ### First Author Publications
 
