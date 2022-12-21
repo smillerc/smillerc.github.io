@@ -5,7 +5,7 @@
 
 # A new array type for domain decomposition in Julia
 
-Part of my research as a grad student was creating a high-performance Fortran code to simulate compressible flow. This code was parallelized using the domain decomposition method, where a large problem is split into many smaller problems that can be solved semi-independantly. This is typically done using MPI too facilitate the communication of data between each domain. Neighbor information is exchanged using "halo" cells, which are ficticious grid cells that make coommunication simple. The tricky part of this is knowing what the neighbor domains are and how to efficiently pass data back and forth.
+Part of my research as a grad student was creating a high-performance Fortran code to simulate compressible flow. This code was parallelized using the domain decomposition method, where a large problem is split into many smaller problems that can be solved semi-independently. This is typically done using MPI too facilitate the communication of data between each domain. Neighbor information is exchanged using "halo" cells, which are fictitious grid cells that make communication simple. The tricky part of this is knowing what the neighbor domains are and how to efficiently pass data back and forth.
 
 I have recently converted this Fortran code ([Cato](https://github.com/smillerc/cato)) over to Julia. Initially the parallelization was accomplished using mult-threaded loops. This method of parallelization doesn't scale as well as domain-decomposition however. MPI is available in Julia, but I needed to create a high level library that facilitated halo exchange. [`MPIHaloArrays.jl`](https://github.com/smillerc/MPIHaloArrays.jl) is a new package that provides the `MPIHaloArray` array type, which is a subtype of `AbstractArray`, that does just this. While there are other existing libraries that have similar decomposition functionality, such as [`MPIArrays.jl`](https://github.com/barche/MPIArrays.jl), [`PencilArrays.jl`](https://github.com/jipolanco/PencilArrays.jl), and [`ImplicitGlobalGrid.jl`](https://github.com/eth-cscs/ImplicitGlobalGrid.jl), I wanted to create an array type specifically for this task. Each library only provides only a portion of the functionality I needed, so I decided to try creating a new one. 
 
@@ -16,7 +16,7 @@ Domain-decomposition splits a large problem into small subdomains that live on d
 ## Features
 
 - 1D, 2D, and 3D domain decomposition.
-- Neighbor exhange with arbitrarily sized halo cell regions. Note, this is currently fixed across all dimensions. 
+- Neighbor exchange with arbitrarily sized halo cell regions. Note, this is currently fixed across all dimensions. 
 - Communication is currently handled by `MPI.ISend` and `MPI.IRecv` underneath, but future versions will give the option for one-sided communication with `MPI.Put` and `MPI.Get`.
 - Halo exchange can be orthogonal-only (e.g. `[i+1,j,k]`) , or it can include corners as well (e.g `[i+1,j+1,k]`)
 
